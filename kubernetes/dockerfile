@@ -1,0 +1,28 @@
+# docker image build -t kubernetes:v0.10 .
+# docker run -d -p 8080:80 kubernetes:v0.10
+# docker run -ti kubernetes:v0.10 bash
+
+FROM nginx:latest
+
+RUN apt-get update
+RUN apt-get install -y \
+    git \
+    curl
+
+ENV VERSION 0.40
+RUN mkdir -p /usr/local/src \
+    && cd /usr/local/src \
+    && curl -L https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_${VERSION}_linux-64bit.tar.gz | tar -xz \
+    && mv hugo /usr/local/bin/hugo \
+    && curl -L https://bin.equinox.io/c/dhgbqpS8Bvy/minify-stable-linux-amd64.tgz | tar -xz \
+    && mv minify /usr/local/bin/ 
+
+WORKDIR /src
+
+RUN cd /src \
+    && git clone https://github.com/kubernetes/website.git \
+    && cd website \
+    && hugo
+
+RUN rm -rf /usr/share/nginx/html \
+    && ln -s /src/website/public/ /usr/share/nginx/html

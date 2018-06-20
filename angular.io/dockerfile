@@ -1,0 +1,32 @@
+# docker image build -t angular.io:v0.5 .
+# docker run -d -p 7070:80 angular.io:v0.5
+# docker run -ti angular.io:v0.5 bash
+
+FROM nginx:latest
+
+RUN apt-get update
+RUN apt-get install -y \
+    git \
+    curl \
+    gnupg \
+    apt-transport-https
+
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get -y install python build-essential nodejs
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+RUN apt-get update
+RUN apt-get install -y yarn
+
+WORKDIR /src
+
+RUN cd /src \
+    && git clone https://github.com/angular/angular.git \
+    && cd angular/aio \
+    && yarn \
+    && yarn build
+
+RUN rm -rf /usr/share/nginx/html \
+    && ln -s /src/angular/aio/dist/ /usr/share/nginx/html
